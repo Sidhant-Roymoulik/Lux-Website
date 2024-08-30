@@ -1,3 +1,229 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
+
+/* Global Styles */
+body {
+  background-color: #121212;
+  /* Dark background for the entire page */
+  color: #e0e0e0;
+  /* Light text color */
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.chessboard-container {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chessboard-wrapper {
+  position: relative;
+}
+
+.chessboard {
+  transition: opacity 2s ease;
+}
+
+.chessboard.faded {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.game-over-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Fully opaque overlay with dark background */
+  font-size: 1.5rem;
+  text-align: center;
+  color: #e0e0e0;
+  /* Light text color */
+  z-index: 10;
+  padding: 20px;
+}
+
+.game-over-message {
+  font-weight: 900;
+  /* Bold text for the game over message */
+  margin-bottom: 20px;
+  /* Space between message and button */
+}
+
+.play-again-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #6f42c1;
+  /* Purple background */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.play-again-button:hover {
+  background-color: #5a2d91;
+  /* Darker purple for hover effect */
+}
+
+.title {
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-align: center;
+  color: #e0e0e0;
+  /* Light text color */
+}
+
+/* Styles for play.tsx */
+.play-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #1e1e1e;
+  /* Dark background for the container */
+  border-radius: 10px;
+  /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  /* Subtle shadow for depth */
+}
+
+.chessboard-container {
+  position: relative;
+  background-color: #121212;
+  /* Dark background */
+  padding: 20px;
+  border-radius: 10px;
+  /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  /* Subtle shadow for depth */
+}
+
+.back-link {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #6f42c1;
+  /* Purple background */
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.back-link-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+
+.back-link:hover {
+  background-color: #5a2d91;
+  /* Darker purple for hover effect */
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.hero {
+  text-align: center;
+  padding: 50px 20px;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+}
+
+.play-button {
+  display: inline-block;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  color: #ffffff;
+  background-color: #6f42c1;
+  /* Purple background */
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.play-button:hover {
+  background-color: #5a2d91;
+  /* Darker purple for hover effect */
+}
+
+.footer {
+  text-align: center;
+  margin-top: 50px;
+  padding: 20px;
+  color: #b0b0b0;
+  /* Light text color */
+}
+
+.evaluation-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 20px;
+  /* Space between the bar and chessboard */
+}
+
+.evaluation-bar {
+  height: 20px;
+  width: 100%;
+  max-width: 300px;
+  /* Adjust width as needed */
+  border-radius: 10px;
+  position: relative;
+  background: #000000;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  /* Optional border */
+}
+
+.evaluation-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-color: #000000;
+  /* Default fill color */
+  transition: width 0.5s ease, right 0.5s ease, left 0.5s ease;
+}
+
+.evaluation-bar-indicator {
+  height: 100%;
+  width: 2px;
+  /* Thin line for the indicator */
+  background-color: #ff0000;
+  /* Color of the indicator */
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  transition: left 0.5s ease;
+  /* Smooth transition for position */
+}
+
+.evaluation-text {
+  font-size: 1rem;
+  color: #e0e0e0;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 5px;
+}
