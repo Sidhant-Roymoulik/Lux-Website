@@ -33,8 +33,6 @@ COPY --link . .
 RUN npm run build
 RUN npm prune --omit=dev
 
-RUN ls -l /lux/src/executables/ # Debugging step
-
 FROM base
 
 COPY --from=build /app /app

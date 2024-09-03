@@ -13,20 +13,6 @@ function startEngine() {
   engineProcess = spawn(uciEnginePath);
 
   engineProcess.stdin?.write("uci\n"); // Initialize UCI mode
-
-  // Log the output for debugging
-  // engineProcess.stdout?.on("data", (data) => {
-  //   console.log(`${data.toString().trim()}`);
-  // });
-
-  // engineProcess.stderr?.on("data", (data) => {
-  //   console.error(`${data.toString().trim()}`);
-  // });
-
-  // engineProcess.on("close", (code) => {
-  //   console.log(`Engine process exited with code ${code}`);
-  //   engineProcess = null;
-  // });
 }
 
 function stopEngine() {
