@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 
 ARG NODE_VERSION=20.17.0
-FROM node:${NODE_VERSION}-slim as base
+FROM node:${NODE_VERSION}-slim AS base
 
 LABEL fly_launch_runtime="Remix"
 
@@ -24,7 +24,7 @@ RUN make release
 
 WORKDIR /app
 
-FROM base as build
+FROM base AS build
 
 COPY --link package-lock.json package.json ./
 RUN npm ci --include=dev

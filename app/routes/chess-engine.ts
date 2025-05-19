@@ -39,7 +39,7 @@ export const action = async ({ request }: { request: Request }) => {
     engineProcess?.stdout?.on("data", onData);
 
     engineProcess?.stdin?.write(`position fen ${position}\n`);
-    engineProcess?.stdin?.write("go movetime 200\n");
+    engineProcess?.stdin?.write("go movetime 500\n");
 
     await new Promise<void>((resolve, reject) => {
       const checkForBestMove = () => {
@@ -58,24 +58,26 @@ export const action = async ({ request }: { request: Request }) => {
       }
     });
 
-    const { engineMove, score } = parseEngineOutput(engineOutput);
+    const { engineMove, score, depth } = parseEngineOutput(engineOutput);
 
-    return json({ engineMove, score });
+    return json({ engineMove, score, depth });
 
   } catch (error) {
     return json({ error: (error as Error).message }, { status: 500 });
   }
 };
 
-function parseEngineOutput(output: string): { engineMove: string, score: number } {
+function parseEngineOutput(output: string): { engineMove: string, score: number, depth: number } {
   const scoreRegex = /score\s(cp|mate)\s(-?\d+)/g;
   const moveMatch = output.match(/bestmove\s(\w+)/);
   const scoreMatches = [...output.matchAll(scoreRegex)];
+  const depthRegex = /depth\s(\d+)/g;
+  const depthMatches = [...output.matchAll(depthRegex)];
 
   let score = 0;
+  let depth = 0;
 
   const scoreMatch = scoreMatches[scoreMatches.length - 1];
-
   if (scoreMatch) {
     const [_, type, value] = scoreMatch;
     if (type === "cp") {
@@ -85,9 +87,16 @@ function parseEngineOutput(output: string): { engineMove: string, score: number 
     }
   }
 
+  if (depthMatches.length > 0) {
+    // Get the last reported depth
+    const lastDepthMatch = depthMatches[depthMatches.length - 1];
+    depth = Number(lastDepthMatch[1]);
+  }
+
   return {
     engineMove: moveMatch ? moveMatch[1] : "",
     score,
+    depth,
   };
 }
 

@@ -13,25 +13,32 @@ export default function ChessBoard() {
   const [game, setGame] = useState(new Chess());
   const [gameOver, setGameOver] = useState(false);
   const [result, setResult] = useState("");
-  const { onEvaluationChange } = useOutletContext<{ onEvaluationChange: (evaluation: number) => void }>();
+  const { onEvaluationChange } = useOutletContext<{ onEvaluationChange: (evaluation: number, depth?: number) => void }>();
 
-  const handlePieceDrop = async (sourceSquare: string, targetSquare: string) => {
-    if (gameOver) return;
+  const handlePieceDrop = (sourceSquare: string, targetSquare: string, piece: string) => {
+    if (gameOver) return false;
 
     const move = game.move({
       from: sourceSquare,
       to: targetSquare,
-      promotion: "q", // always promote to a queen for simplicity
+      promotion: "q",
     });
 
-    if (move === null) return; // Invalid move
+    if (move === null) return false;
 
+    setGame(new Chess(game.fen()));
+
+    // Call async logic separately (not blocking the drop)
+    handleEngineMove();
+
+    return true;
+  };
+
+  const handleEngineMove = async () => {
     if (game.isGameOver()) {
       handleGameOver();
       return;
     }
-
-    setGame(new Chess(game.fen()));
 
     // Send the move to the backend
     const response = await fetch("/chess-engine", {
@@ -62,7 +69,7 @@ export default function ChessBoard() {
     }
 
     setGame(new Chess(game.fen()));
-    onEvaluationChange(data.score); // Notify the parent component of the new evaluation score
+    onEvaluationChange(data.score, data.depth); // Notify the parent component of the new evaluation score
   };
 
   const handleGameOver = () => {
@@ -85,7 +92,7 @@ export default function ChessBoard() {
     setGame(new Chess());
     setGameOver(false);
     setResult("");
-    onEvaluationChange(0); // Reset evaluation score
+    onEvaluationChange(0, 0); // Reset evaluation score
   };
 
   const getResultColor = () => {
