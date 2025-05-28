@@ -77,14 +77,18 @@ export default function ChessBoard() {
 
     if (game.isCheckmate()) {
       setResult(game.turn() === "w" ? "You Lost!" : "You Won!");
-    } else if (game.isDraw()) {
-      setResult("It's a Draw!");
+
     } else if (game.isStalemate()) {
       setResult("Stalemate!");
+
     } else if (game.isThreefoldRepetition()) {
       setResult("Threefold Repetition - Draw!");
+
     } else if (game.isInsufficientMaterial()) {
       setResult("Insufficient Material - Draw!");
+
+    } else if (game.isDraw()) {
+      setResult("It's a Draw!");
     }
   };
 
