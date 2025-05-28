@@ -68,11 +68,14 @@ export const action = async ({ request }: { request: Request }) => {
 };
 
 function parseEngineOutput(output: string): { engineMove: string, score: number, depth: number } {
+
   const scoreRegex = /score\s(cp|mate)\s(-?\d+)/g;
+  const depthRegex = /depth\s(\d+)/g;
+
   const moveMatch = output.match(/bestmove\s(\w+)/);
   const scoreMatches = [...output.matchAll(scoreRegex)];
-  const depthRegex = /depth\s(\d+)/g;
   const depthMatches = [...output.matchAll(depthRegex)];
+
 
   let score = 0;
   let depth = 0;
@@ -88,7 +91,6 @@ function parseEngineOutput(output: string): { engineMove: string, score: number,
   }
 
   if (depthMatches.length > 0) {
-    // Get the last reported depth
     const lastDepthMatch = depthMatches[depthMatches.length - 1];
     depth = Number(lastDepthMatch[1]);
   }
