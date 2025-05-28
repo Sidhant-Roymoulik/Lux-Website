@@ -1,3 +1,4 @@
+import { M } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 import React from "react";
 
 interface EvaluationBarProps {
@@ -15,8 +16,8 @@ const EvaluationBar: React.FC<EvaluationBarProps> = ({ evaluation, depth }) => {
   };
 
   const getEvalText = () => {
-    if (Math.abs(evaluation) > 100000) {
-      const mate = 300000 - Math.abs(evaluation);
+    if (evaluation > 100000) {
+      const mate = evaluation - 300000;
       return (mate < 0 ? "White" : "Black") + ` has Mate in ${Math.abs(mate) / 2}`;
     }
 
