@@ -18,7 +18,7 @@ const EvaluationBar: React.FC<EvaluationBarProps> = ({ evaluation, depth }) => {
   const getEvalText = () => {
     if (evaluation > 100000) {
       const mate = evaluation - 300000;
-      return (mate < 0 ? "White" : "Black") + ` has Mate in ${Math.abs(mate) / 2}`;
+      return (mate < 0 ? "White" : "Black") + ` has Mate in ${Math.floor(Math.abs(mate) / 2)}`;
     }
 
     return -evaluation / 100;
