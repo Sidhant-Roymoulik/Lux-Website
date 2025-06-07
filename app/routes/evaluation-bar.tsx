@@ -1,4 +1,3 @@
-import { M } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 import React from "react";
 
 interface EvaluationBarProps {

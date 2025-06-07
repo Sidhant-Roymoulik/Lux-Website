@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { MetaFunction, useOutletContext } from "@remix-run/react";
@@ -21,7 +21,7 @@ export default function ChessBoard() {
     const move = game.move({
       from: sourceSquare,
       to: targetSquare,
-      promotion: "q",
+      promotion: piece,
     });
 
     if (move === null) return false;
@@ -107,12 +107,14 @@ export default function ChessBoard() {
 
   return (
     <div className="chessboard-wrapper">
+
       <div className={`chessboard ${gameOver ? "faded" : ""}`}>
         <Chessboard
           position={game.fen()}
           onPieceDrop={handlePieceDrop}
         />
       </div>
+
       {gameOver && (
         <div className="game-over-overlay" style={{ color: getResultColor() }}>
           <div className="game-over-message">{result}</div>
@@ -121,6 +123,11 @@ export default function ChessBoard() {
           </button>
         </div>
       )}
+
+      <div style={{ marginTop: 16, color: "#b0b0b0", wordBreak: "break-all", fontSize: 14, textAlign: "center" }}>
+        <strong>{game.fen()}</strong>
+      </div>
+
     </div>
   );
 }
