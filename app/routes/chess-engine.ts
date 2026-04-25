@@ -32,6 +32,13 @@ function startEngine(): void {
       }
     };
 
+    engineProcess!.on("error", (err) => {
+      clearTimeout(timeout);
+      engineProcess = null;
+      engineReadyPromise = null;
+      reject(new Error(`Engine spawn failed: ${err.message}`));
+    });
+
     engineProcess!.stdout!.on("data", onData);
     engineProcess!.stdin!.write("uci\n");
   });
