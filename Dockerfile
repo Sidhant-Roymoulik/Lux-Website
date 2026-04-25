@@ -7,6 +7,7 @@ FROM node:${NODE_VERSION}-slim AS engine-build
 
 RUN apt-get update -qq && \
   apt-get install --no-install-recommends -y \
+  ca-certificates \
   g++ \
   make \
   git && \
