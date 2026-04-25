@@ -2,73 +2,104 @@ import { json } from "@remix-run/node";
 import { spawn, ChildProcess } from "child_process";
 
 let engineProcess: ChildProcess | null = null;
+let engineReadyPromise: Promise<void> | null = null;
+let engineMutex: Promise<unknown> = Promise.resolve();
 
-function startEngine() {
-  let uciEnginePath: string = "engine/Lux-bmi2";
-
-  if (process.env.NODE_ENV !== "production") {
-    uciEnginePath = "app/engine/Lux-bmi2.exe";
-  }
-
-  engineProcess = spawn(uciEnginePath);
-
-  engineProcess.stdin?.write("uci\n"); // Initialize UCI mode
+function getEnginePath(): string {
+  return process.env.NODE_ENV !== "production"
+    ? "app/engine/Lux-bmi2.exe"
+    : "engine/Lux-bmi2";
 }
 
-function stopEngine() {
+function startEngine(): void {
+  engineProcess = spawn(getEnginePath());
+  engineProcess.on("exit", () => {
+    engineProcess = null;
+    engineReadyPromise = null;
+  });
+
+  engineReadyPromise = new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(
+      () => reject(new Error("Engine UCI init timeout")),
+      5000,
+    );
+
+    const onData = (data: Buffer) => {
+      if (data.toString().includes("uciok")) {
+        clearTimeout(timeout);
+        engineProcess?.stdout?.off("data", onData);
+        resolve();
+      }
+    };
+
+    engineProcess!.stdout!.on("data", onData);
+    engineProcess!.stdin!.write("uci\n");
+  });
+}
+
+function stopEngine(): void {
   if (engineProcess) {
     engineProcess.kill();
     engineProcess = null;
+    engineReadyPromise = null;
   }
+}
+
+async function runSearch(
+  position: string,
+): Promise<{ engineMove: string; score: number; depth: number }> {
+  await engineReadyPromise;
+
+  return new Promise((resolve, reject) => {
+    let output = "";
+
+    const timeout = setTimeout(() => {
+      engineProcess?.stdout?.off("data", onData);
+      reject(new Error("Engine search timeout"));
+    }, 5000);
+
+    const onData = (data: Buffer) => {
+      output += data.toString();
+      if (output.includes("bestmove")) {
+        clearTimeout(timeout);
+        engineProcess?.stdout?.off("data", onData);
+        resolve(parseEngineOutput(output));
+      }
+    };
+
+    if (!engineProcess?.stdout) {
+      reject(new Error("Engine process not available"));
+      return;
+    }
+
+    engineProcess.stdout.on("data", onData);
+    engineProcess.stdin!.write(`position fen ${position}\n`);
+    engineProcess.stdin!.write("go movetime 200\n");
+  });
 }
 
 export const action = async ({ request }: { request: Request }) => {
   const { position } = await request.json();
 
   try {
-    if (!engineProcess) {
-      startEngine();
-    }
+    if (!engineProcess) startEngine();
 
-    let engineOutput = "";
+    const result = await (engineMutex = engineMutex.then(
+      () => runSearch(position),
+      () => runSearch(position),
+    ));
 
-    const onData = (data: Buffer) => {
-      engineOutput += data.toString();
-    };
-
-    engineProcess?.stdout?.on("data", onData);
-
-    engineProcess?.stdin?.write(`position fen ${position}\n`);
-    engineProcess?.stdin?.write("go movetime 500\n");
-
-    await new Promise<void>((resolve, reject) => {
-      const checkForBestMove = () => {
-        if (engineOutput.includes("bestmove")) {
-          engineProcess?.stdout?.off("data", onData); // Remove listener after processing
-          engineProcess?.stdout?.off("data", checkForBestMove); // Remove listener after processing
-
-          resolve();
-        }
-      };
-
-      if (engineProcess && engineProcess.stdout) {
-        engineProcess.stdout.on("data", checkForBestMove);
-      } else {
-        reject(new Error("Engine process not available or no stdout."));
-      }
-    });
-
-    const { engineMove, score, depth } = parseEngineOutput(engineOutput);
-
-    return json({ engineMove, score, depth });
-
+    return json(result);
   } catch (error) {
     return json({ error: (error as Error).message }, { status: 500 });
   }
 };
 
-function parseEngineOutput(output: string): { engineMove: string, score: number, depth: number } {
-
+function parseEngineOutput(output: string): {
+  engineMove: string;
+  score: number;
+  depth: number;
+} {
   const scoreRegex = /score\s(cp|mate)\s(-?\d+)/g;
   const depthRegex = /depth\s(\d+)/g;
 
@@ -76,13 +107,12 @@ function parseEngineOutput(output: string): { engineMove: string, score: number,
   const scoreMatches = [...output.matchAll(scoreRegex)];
   const depthMatches = [...output.matchAll(depthRegex)];
 
-
   let score = 0;
   let depth = 0;
 
   const scoreMatch = scoreMatches[scoreMatches.length - 1];
   if (scoreMatch) {
-    const [_, type, value] = scoreMatch;
+    const [, type, value] = scoreMatch;
     if (type === "cp") {
       score = Number(value);
     } else if (type === "mate") {
@@ -91,8 +121,7 @@ function parseEngineOutput(output: string): { engineMove: string, score: number,
   }
 
   if (depthMatches.length > 0) {
-    const lastDepthMatch = depthMatches[depthMatches.length - 1];
-    depth = Number(lastDepthMatch[1]);
+    depth = Number(depthMatches[depthMatches.length - 1][1]);
   }
 
   return {
@@ -102,5 +131,6 @@ function parseEngineOutput(output: string): { engineMove: string, score: number,
   };
 }
 
-// Ensure the engine is stopped when the process exits
 process.on("exit", stopEngine);
+process.on("SIGTERM", stopEngine);
+process.on("SIGINT", stopEngine);

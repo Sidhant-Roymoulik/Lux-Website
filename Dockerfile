@@ -1,30 +1,26 @@
 # syntax = docker/dockerfile:1
 
 ARG NODE_VERSION=20.17.0
-FROM node:${NODE_VERSION}-slim AS base
 
-LABEL fly_launch_runtime="Remix"
-
-WORKDIR /app
-ENV NODE_ENV="production"
+# Stage 1: compile the chess engine
+FROM node:${NODE_VERSION}-slim AS engine-build
 
 RUN apt-get update -qq && \
   apt-get install --no-install-recommends -y \
   g++ \
   make \
-  git
+  git && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN git config --global http.sslVerify false
-
-# Clone and build Lux chess engine
 RUN git clone --depth 1 https://github.com/Sidhant-Roymoulik/Lux /lux
 
 WORKDIR /lux/src
 RUN make release
 
-WORKDIR /app
+# Stage 2: build the Remix app
+FROM node:${NODE_VERSION}-slim AS app-build
 
-FROM base AS build
+WORKDIR /app
 
 COPY --link package-lock.json package.json ./
 RUN npm ci --include=dev
@@ -33,10 +29,16 @@ COPY --link . .
 RUN npm run build
 RUN npm prune --omit=dev
 
-FROM base
+# Stage 3: minimal runtime image
+FROM node:${NODE_VERSION}-slim
 
-COPY --from=build /app /app
-COPY --from=build /lux/src/executables/Lux-bmi2 /app/engine/Lux-bmi2
+LABEL fly_launch_runtime="Remix"
+
+WORKDIR /app
+ENV NODE_ENV="production"
+
+COPY --from=app-build /app /app
+COPY --from=engine-build /lux/src/executables/Lux-bmi2 /app/engine/Lux-bmi2
 
 EXPOSE 3000
 CMD [ "npm", "run", "start" ]
