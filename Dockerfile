@@ -15,7 +15,7 @@ RUN apt-get update -qq && \
 
 RUN git clone --depth 1 https://github.com/Sidhant-Roymoulik/Lux /lux
 
-WORKDIR /lux/src
+WORKDIR /lux
 RUN make release
 
 # Stage 2: build the Remix app
