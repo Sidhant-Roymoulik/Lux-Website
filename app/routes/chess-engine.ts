@@ -8,7 +8,7 @@ let engineMutex: Promise<unknown> = Promise.resolve();
 function getEnginePath(): string {
   return process.env.NODE_ENV !== "production"
     ? "app/engine/Lux-bmi2.exe"
-    : "engine/Lux-bmi2";
+    : "engine/Lux-modern";
 }
 
 function startEngine(): void {
@@ -39,6 +39,7 @@ function startEngine(): void {
       reject(new Error(`Engine spawn failed: ${err.message}`));
     });
 
+    engineProcess!.stdin!.on("error", () => {}); // suppress EPIPE if process exits before write
     engineProcess!.stdout!.on("data", onData);
     engineProcess!.stdin!.write("uci\n");
   });

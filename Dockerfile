@@ -39,7 +39,7 @@ WORKDIR /app
 ENV NODE_ENV="production"
 
 COPY --from=app-build /app /app
-COPY --from=engine-build /lux/src/executables/Lux-bmi2 /app/engine/Lux-bmi2
+COPY --from=engine-build /lux/src/executables/Lux-modern /app/engine/Lux-modern
 
 EXPOSE 3000
 CMD [ "npm", "run", "start" ]
