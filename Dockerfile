@@ -2,8 +2,8 @@
 
 ARG NODE_VERSION=20.17.0
 
-# Stage 1: compile the chess engine
-FROM node:${NODE_VERSION}-slim AS engine-build
+# Stage 1: compile the chess engine (Ubuntu 24.04 ships GCC 13; GCC 12 has an ICE with chess.hpp C++20 templates)
+FROM ubuntu:24.04 AS engine-build
 
 RUN apt-get update -qq && \
   apt-get install --no-install-recommends -y \
