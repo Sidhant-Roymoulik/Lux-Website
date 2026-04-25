@@ -2,13 +2,15 @@
 
 ARG NODE_VERSION=20.17.0
 
-# Stage 1: compile the chess engine (Ubuntu 24.04 ships GCC 13; GCC 12 has an ICE with chess.hpp C++20 templates)
-FROM ubuntu:24.04 AS engine-build
+# Stage 1: compile the chess engine
+# Use same base as runtime (node:slim = Debian Bookworm) to avoid glibc mismatch.
+# Install g++-13 explicitly: g++-12 (Bookworm default) has an ICE with chess.hpp C++20 templates.
+FROM node:${NODE_VERSION}-slim AS engine-build
 
 RUN apt-get update -qq && \
   apt-get install --no-install-recommends -y \
   ca-certificates \
-  g++ \
+  g++-13 \
   make \
   git && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -16,7 +18,7 @@ RUN apt-get update -qq && \
 RUN git clone --depth 1 https://github.com/Sidhant-Roymoulik/Lux /lux
 
 WORKDIR /lux
-RUN make release
+RUN CXX=g++-13 make release
 
 # Stage 2: build the Remix app
 FROM node:${NODE_VERSION}-slim AS app-build

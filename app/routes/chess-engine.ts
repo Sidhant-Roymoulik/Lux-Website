@@ -24,21 +24,34 @@ function startEngine(): void {
       5000,
     );
 
+    const cleanup = () => {
+      clearTimeout(timeout);
+      engineProcess?.stdout?.removeListener("data", onData);
+      engineProcess?.removeListener("exit", onExit);
+    };
+
     const onData = (data: Buffer) => {
       if (data.toString().includes("uciok")) {
-        clearTimeout(timeout);
-        engineProcess?.stdout?.off("data", onData);
+        cleanup();
         resolve();
       }
     };
 
+    const onExit = (code: number | null, signal: string | null) => {
+      cleanup();
+      engineProcess = null;
+      engineReadyPromise = null;
+      reject(new Error(`Engine exited unexpectedly: code=${code} signal=${signal}`));
+    };
+
     engineProcess!.on("error", (err) => {
-      clearTimeout(timeout);
+      cleanup();
       engineProcess = null;
       engineReadyPromise = null;
       reject(new Error(`Engine spawn failed: ${err.message}`));
     });
 
+    engineProcess!.once("exit", onExit);
     engineProcess!.stdin!.on("error", () => {}); // suppress EPIPE if process exits before write
     engineProcess!.stdout!.on("data", onData);
     engineProcess!.stdin!.write("uci\n");
