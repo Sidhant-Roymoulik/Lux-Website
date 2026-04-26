@@ -8,12 +8,18 @@ let engineMutex: Promise<unknown> = Promise.resolve();
 function getEnginePath(): string {
   return process.env.NODE_ENV !== "production"
     ? "app/engine/Lux-bmi2.exe"
-    : "engine/Lux-modern";
+    : "engine/Lux-bmi2";
 }
 
 function startEngine(): void {
-  engineProcess = spawn(getEnginePath());
-  engineProcess.on("exit", () => {
+  const path = getEnginePath();
+  console.log(`[engine] spawning: ${path}`);
+  engineProcess = spawn(path);
+  engineProcess.stderr?.on("data", (data: Buffer) => {
+    console.error(`[engine stderr] ${data.toString().trim()}`);
+  });
+  engineProcess.on("exit", (code, signal) => {
+    console.log(`[engine] exited code=${code} signal=${signal}`);
     engineProcess = null;
     engineReadyPromise = null;
   });
@@ -52,7 +58,7 @@ function startEngine(): void {
     });
 
     engineProcess!.once("exit", onExit);
-    engineProcess!.stdin!.on("error", () => {}); // suppress EPIPE if process exits before write
+    engineProcess!.stdin!.on("error", (err) => console.error(`[engine stdin error] ${err.message}`));
     engineProcess!.stdout!.on("data", onData);
     engineProcess!.stdin!.write("uci\n");
   });
