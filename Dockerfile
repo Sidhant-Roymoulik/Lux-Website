@@ -32,9 +32,18 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # Stage 3: minimal runtime image
-FROM node:${NODE_VERSION}-slim
+# Must use Ubuntu 24.04 to match the glibc/libstdc++ version the engine was compiled against.
+FROM ubuntu:24.04
 
 LABEL fly_launch_runtime="Remix"
+
+RUN apt-get update -qq && \
+  apt-get install --no-install-recommends -y \
+  ca-certificates \
+  curl && \
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+  apt-get install --no-install-recommends -y nodejs && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 ENV NODE_ENV="production"
